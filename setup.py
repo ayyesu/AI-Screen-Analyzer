@@ -13,6 +13,7 @@ def check_and_install_dependencies():
                 f.write("pytesseract==0.3.10\n")
                 f.write("keyboard==0.13.5\n")
                 f.write("requests==2.31.0\n")
+                f.write("pyttsx3 == 2.98\n")
 
         # Install dependencies
         print("Checking and installing dependencies...")
