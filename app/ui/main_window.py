@@ -8,6 +8,7 @@ from app.ui.theme import ModernTheme
 from app.core.screenshot import ScreenshotTaker
 from app.core.ocr import OCRProcessor
 from app.core.api import GeminiAPI
+from app.core.speech import SpeechService
 
 class MainWindow:
     def __init__(self, config_manager, hotkey_manager):
@@ -29,8 +30,9 @@ class MainWindow:
         self.colors = self.theme['colors']
         self.fonts = self.theme['fonts']
 
-        # Initialize API
+        # Initialize API and Speech Service
         self.gemini_api = GeminiAPI(self.config_manager)
+        self.speech_service = SpeechService()
 
         # Setup UI
         self.setup_ui()
@@ -90,7 +92,11 @@ class MainWindow:
 
         copy_btn = ttk.Button(button_frame, text="Copy Response",
                              command=self.copy_response)
-        copy_btn.pack(side=tk.LEFT)
+        copy_btn.pack(side=tk.LEFT, padx=(0, 10))
+
+        speak_btn = ttk.Button(button_frame, text="Read Response",
+                            command=self.speak_response)
+        speak_btn.pack(side=tk.LEFT)
 
         # Notebook for different outputs
         self.notebook = ttk.Notebook(main_frame)
@@ -310,11 +316,23 @@ class MainWindow:
         self.root.clipboard_append(response_text)
         self.status_var.set("Response copied to clipboard")
 
+    def speak_response(self):
+        """Read the AI response using text-to-speech."""
+        response_text = self.response_output.get("1.0", tk.END).strip()
+        if response_text:
+            # Start speech in a separate thread to prevent UI freezing
+            threading.Thread(target=self.speech_service.speak, args=(response_text,), daemon=True).start()
+            self.set_status("Reading response...")
+        else:
+            self.set_status("No response to read")
+
     def clear_output(self):
         self.text_output.delete(1.0, tk.END)
         self.response_output.delete(1.0, tk.END)
         self.progress_var.set("")
-        self.status_var.set("Ready")
+        self.status_var.set("Output cleared")
+        # Stop any ongoing speech
+        self.speech_service.stop()
 
     def run(self):
         self.root.mainloop()
