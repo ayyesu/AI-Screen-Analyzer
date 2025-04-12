@@ -10,6 +10,7 @@ try:
     import pytesseract
     import keyboard
     import requests
+    import customtkinter
 except ImportError:
     # If not installed, try to install them
     print("Some dependencies are missing. Attempting to install...")
@@ -21,21 +22,22 @@ except ImportError:
         else:
             # If setup.py doesn't exist, install directly
             import subprocess
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "pillow", "pytesseract", "keyboard", "requests"])
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "pillow", "pytesseract", "keyboard", "requests", "customtkinter"])
 
         # Try importing again
         from PIL import ImageGrab, Image
         import pytesseract
         import keyboard
         import requests
+        import customtkinter
     except Exception as e:
         print(f"Error installing dependencies: {str(e)}")
-        print("Please run 'pip install pillow pytesseract keyboard requests' manually.")
+        print("Please run 'pip install pillow pytesseract keyboard requests customtkinter' manually.")
         sys.exit(1)
 
 from app.utils.config import ConfigManager
 from app.utils.hotkey import HotkeyManager
-from app.ui.main_window import MainWindow
+from app.ui.ctk_main_window import CTkMainWindow
 
 def main():
     # Initialize configuration
@@ -44,8 +46,8 @@ def main():
     # Initialize hotkey manager
     hotkey_manager = HotkeyManager(config_manager)
 
-    # Initialize and run the main window
-    app = MainWindow(config_manager, hotkey_manager)
+    # Initialize and run the main window with CustomTkinter
+    app = CTkMainWindow(config_manager, hotkey_manager)
     app.run()
 
 if __name__ == "__main__":

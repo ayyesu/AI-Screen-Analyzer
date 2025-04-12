@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox, ttk
 import keyboard
-from app.ui.theme import ModernTheme
+from app.ui.ctk_theme import CTkTheme
 
 class PreferencesDialog:
     def __init__(self, parent, config_manager, status_callback):
@@ -17,16 +17,15 @@ class PreferencesDialog:
         pref_window.grab_set()
 
         # Apply theme
-        theme = ModernTheme.apply(pref_window)
-        colors = theme['colors']
-        fonts = theme['fonts']
+        theme = CTkTheme.apply()
+        colors = CTkTheme.COLORS
 
         # Main container
         main_frame = ttk.Frame(pref_window, padding="20 15 20 15")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Header
-        header = ttk.Label(main_frame, text="General Settings", font=fonts['heading'])
+        header = ttk.Label(main_frame, text="General Settings", font=('Helvetica', 14, 'bold'))
         header.pack(pady=(0, 20))
 
         # Settings container
