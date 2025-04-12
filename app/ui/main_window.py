@@ -185,7 +185,7 @@ class MainWindow:
         self.status_var.set(message)
 
     def take_screenshot(self):
-        self.status_var.set("Taking screenshot...")
+        self.status_var.set("Select area for screenshot...")
         self.root.update()
 
         # Minimize the window before taking screenshot
@@ -194,10 +194,21 @@ class MainWindow:
         time.sleep(0.5)  # Give time for the window to minimize
 
         try:
-            # Take the screenshot
-            screenshot = ScreenshotTaker.take_screenshot()
+            # Create selection window and wait for region selection
+            def handle_selection(region):
+                if region:
+                    # Take screenshot of selected region
+                    screenshot = ScreenshotTaker.take_screenshot(region=region)
+                    self.root.deiconify()
+                    self.process_screenshot(screenshot)
+                else:
+                    self.root.deiconify()
+                    self.status_var.set("Screenshot cancelled")
 
-            # Restore the window
+            from app.ui.selection_window import SelectionWindow
+            SelectionWindow(self.root, handle_selection)
+        except Exception as e:
+            self.root.deiconify()
             self.root.deiconify()
 
             # Process the screenshot
@@ -281,33 +292,88 @@ class MainWindow:
             self.status_var.set(f"Error displaying response: {str(e)}")
 
     def format_code_response(self, response):
-        """Format response to highlight code blocks."""
-        # Split the response by code blocks marked with ```
-        parts = re.split(r'(```[\s\S]*?```)', response)
+        """Format response to highlight code blocks with improved styling."""
+        # Clear any existing tags
+        for tag in self.response_output.tag_names():
+            self.response_output.tag_delete(tag)
 
-        for part in parts:
-            if part.startswith('```'):
-                # This is a code block, format it accordingly
-                code_content = part.strip('`').strip()
+        # Configure text tags for different elements
+        self.response_output.tag_configure(
+            "heading",
+            font=("Consolas", 12, "bold"),
+            foreground="#2C3E50",
+            spacing1=10,
+            spacing3=5
+        )
+        self.response_output.tag_configure(
+            "code_language",
+            foreground="#2980B9",
+            font=("Consolas", 10, "bold"),
+            spacing1=5
+        )
+        self.response_output.tag_configure(
+            "code_block",
+            background="#F7F9FA",
+            foreground="#2C3E50",
+            font=("Consolas", 10),
+            spacing1=10,
+            spacing3=10,
+            relief="solid",
+            borderwidth=1,
+            lmargin1=20,
+            lmargin2=20,
+            rmargin=20
+        )
+        self.response_output.tag_configure(
+            "bullet_point",
+            lmargin1=20,
+            lmargin2=40
+        )
 
-                # Check if the first line specifies a language
+        # Split the response into sections
+        sections = re.split(r'(#{1,6}\s.*?\n|```[\s\S]*?```|\d+\.\s.*?\n|•\s.*?\n|-\s.*?\n)', response)
+
+        for section in sections:
+            if not section or section.isspace():
+                continue
+
+            # Handle headers
+            if re.match(r'#{1,6}\s', section):
+                cleaned_header = re.sub(r'#{1,6}\s', '', section).strip()
+                self.response_output.insert(tk.END, cleaned_header + "\n", "heading")
+
+            # Handle code blocks
+            elif section.startswith('```'):
+                code_content = section.strip('`').strip()
                 lines = code_content.split('\n', 1)
+
                 if len(lines) > 1 and not lines[0].strip().isspace():
                     language = lines[0].strip()
-                    code = lines[1]
+                    code = lines[1].rstrip()
                 else:
                     language = "code"
-                    code = code_content
+                    code = code_content.rstrip()
 
-                self.response_output.insert(tk.END, f"# {language} code:\n", "code_language")
-                self.response_output.insert(tk.END, code + "\n\n", "code_block")
+                self.response_output.insert(tk.END, "\n")
+                if language != "code":
+                    self.response_output.insert(tk.END, f"Language: {language}\n", "code_language")
+                self.response_output.insert(tk.END, code + "\n", "code_block")
+                self.response_output.insert(tk.END, "\n")
+
+            # Handle bullet points and numbered lists
+            elif re.match(r'(\d+\.|-|•)\s', section):
+                self.response_output.insert(tk.END, section, "bullet_point")
+
+            # Regular text
             else:
-                # Regular text
-                self.response_output.insert(tk.END, part)
+                cleaned_text = section.strip()
+                if cleaned_text:
+                    self.response_output.insert(tk.END, cleaned_text + "\n")
 
-        # Apply tags for syntax highlighting
-        self.response_output.tag_configure("code_language", foreground="blue", font=("Courier", 10, "bold"))
-        self.response_output.tag_configure("code_block", background="#f5f5f5", font=("Courier", 10))
+        # Ensure there's no trailing newline
+        content = self.response_output.get("1.0", tk.END)
+        if content.endswith('\n\n'):
+            self.response_output.delete("end-2c", tk.END)
 
     def copy_response(self):
         """Copy the current response to clipboard."""

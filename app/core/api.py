@@ -13,13 +13,13 @@ class GeminiAPI:
             # Choose a prompt based on whether this is code-related
             if is_code_related:
                 prompt = (
-                    "I'm going to share text from a screenshot that contains a coding question or code-related problem. "
+                    "The following text contains a coding question or code-related problem. "
                     "Please analyze it and provide a helpful, detailed response that includes:\n"
                     "1. A clear explanation of the problem or question\n"
                     "2. A complete solution with working code examples\n"
                     "3. An explanation of how the code works\n"
                     "4. If there are errors in the original code, identify and fix them\n\n"
-                    f"Screenshot text:\n{text}"
+                    f"Text to analyze:\n{text}"
                 )
             else:
                 prompt = f"Please analyze the following text extracted from a screenshot and provide a helpful response:\n\n{text}"
