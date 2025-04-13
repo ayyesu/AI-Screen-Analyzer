@@ -1,15 +1,47 @@
 import re
 import pytesseract
+from PIL import Image
+from .image_analysis import ImageAnalyzer
 
 class OCRProcessor:
     @staticmethod
-    def extract_text(image):
-        """Extract text from an image using OCR"""
+    def process_image(image, mode='auto'):
+        """Process image based on selected mode
+
+        Args:
+            image: PIL Image object
+            mode: Processing mode ('auto', 'code', 'general', 'image')
+
+        Returns:
+            dict: Processing results with type and content
+        """
         try:
+            # For image mode, skip OCR and do direct image analysis
+            if mode == 'image':
+                analysis = ImageAnalyzer.analyze_image(image)
+                return {
+                    'type': 'image_analysis',
+                    'content': analysis
+                }
+
+            # For other modes, attempt OCR first
             text = pytesseract.image_to_string(image)
-            return text
+
+            # If no text found in auto mode, fallback to image analysis
+            if mode == 'auto' and (not text.strip() or len(text.strip()) < 10):
+                analysis = ImageAnalyzer.analyze_image(image)
+                return {
+                    'type': 'image_analysis',
+                    'content': analysis
+                }
+
+            return {
+                'type': 'text',
+                'content': text,
+                'is_code': mode == 'code' or (mode == 'auto' and OCRProcessor.detect_code_content(text))
+            }
         except Exception as e:
-            raise Exception(f"OCR processing error: {str(e)}")
+            raise Exception(f"Image processing error: {str(e)}")
 
     @staticmethod
     def detect_code_content(text):

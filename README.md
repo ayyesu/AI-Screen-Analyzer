@@ -1,13 +1,14 @@
 # Screen Reader Application
 
-A powerful screen reader application that captures screen content and processes it using Optical Character Recognition (OCR) technology and Text-to-Speech capabilities. The application can detect code snippets, programming questions, and regular text, making it particularly useful for developers and technical users. With its modern UI and enhanced accessibility features, it provides a seamless user experience.
+A powerful screen reader application that captures screen content and processes it using Optical Character Recognition (OCR) technology and Text-to-Speech capabilities. The application features an advanced image analysis mode, CustomTkinter-based modern UI, and enhanced text processing capabilities. It can detect code snippets, programming questions, and regular text, making it particularly useful for developers and technical users.
 
 ## Features
 
 - Screen text capture and reading
-- Text-to-Speech functionality
+- Advanced image analysis mode
+- Text-to-Speech functionality with toggle controls
 - Automatic code detection
-- Modern, responsive UI with theme support
+- Modern CustomTkinter-based UI with theme support
 - Customizable hotkeys
 - Enhanced button interactions
 - Support for programming-related content
@@ -32,6 +33,7 @@ A powerful screen reader application that captures screen content and processes 
      - keyboard (0.13.5)
      - requests (2.31.0)
      - pyttsx3 (latest)
+     - customtkinter (latest)
    - Check for Tesseract OCR installation
 
 3. Make sure Tesseract OCR is properly installed and added to your system PATH
@@ -47,11 +49,12 @@ A powerful screen reader application that captures screen content and processes 
    python run.py
    ```
 
-2. The application will initialize with a modern user interface featuring:
+2. The application will initialize with a modern CustomTkinter interface featuring:
    - Dark/Light theme support
    - Intuitive button layouts
    - Real-time OCR status indicators
-   - Text-to-Speech controls
+   - Text-to-Speech controls with toggle functionality
+   - Image analysis mode selection
 
 ## Features in Detail
 
@@ -59,26 +62,28 @@ A powerful screen reader application that captures screen content and processes 
 - Captures screen content and converts it to text
 - Specialized detection for code snippets and programming content
 - Handles various programming languages and syntax
+- Advanced image analysis mode for enhanced text recognition
 
 ### Text-to-Speech
 - Natural-sounding voice output
+- Toggle functionality for easy control
 - Adjustable speech rate and volume
 - Support for multiple languages
 - Pause/Resume functionality
 
-### Code Detection
-Automatically identifies:
-- Programming language keywords
-- Function definitions and calls
-- Error messages and exceptions
-- Programming questions and discussions
+### Image Analysis
+- Advanced mode for complex image processing
+- Enhanced text recognition accuracy
+- Support for various image formats
+- Optimized for technical content
 
-### Modern UI
+### Modern CustomTkinter UI
 - Responsive design that adapts to window size
 - Dark and light theme support
 - Smooth animations and transitions
 - Enhanced button feedback and interactions
 - Accessibility-focused design elements
+- Selection window for different modes
 
 ### Configuration
 - Customizable settings through config.ini
@@ -90,19 +95,24 @@ Automatically identifies:
 
 ```
 ├── app/
-│   ├── core/         # Core functionality
-│   │   ├── ocr.py    # OCR processing
-│   │   ├── speech.py # Text-to-speech handling
-│   │   └── api.py    # API integrations
-│   ├── ui/           # User interface components
-│   │   ├── main_window.py # Main application window
-│   │   ├── theme.py      # Theme management
-│   │   └── dialogs.py    # Dialog windows
-│   ├── utils/        # Utility functions
-│   └── main.py       # Application entry point
-├── setup.py          # Dependency installation
-├── run.py            # Runner script
-└── run_screen_reader.bat  # Windows batch launcher
+│   ├── core/              # Core functionality
+│   │   ├── ocr.py         # OCR processing
+│   │   ├── speech.py      # Text-to-speech handling
+│   │   ├── api.py         # API integrations
+│   │   ├── screenshot.py  # Screen capture
+│   │   └── image_analysis.py # Image analysis
+│   ├── ui/                # User interface components
+│   │   ├── ctk_main_window.py    # Main application window
+│   │   ├── ctk_selection_window.py # Mode selection window
+│   │   ├── ctk_theme.py          # Theme management
+│   │   └── dialogs.py            # Dialog windows
+│   ├── utils/             # Utility functions
+│   │   ├── config.py      # Configuration handling
+│   │   └── hotkey.py      # Hotkey management
+│   └── main.py           # Application entry point
+├── setup.py              # Dependency installation
+├── run.py               # Runner script
+└── run_screen_reader.bat # Windows batch launcher
 ```
 
 ## Contributing

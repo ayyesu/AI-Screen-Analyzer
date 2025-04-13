@@ -12,6 +12,7 @@ from app.core.screenshot import ScreenshotTaker
 from app.core.ocr import OCRProcessor
 from app.core.api import GeminiAPI
 from app.core.speech import SpeechService
+from app.core.vision_analysis import VisionAnalyzer
 
 class CTkMainWindow:
     def __init__(self, config_manager, hotkey_manager):
@@ -38,9 +39,10 @@ class CTkMainWindow:
         self.fonts = self.theme['fonts']
         self.animations = CTkTheme.configure_animations()
 
-        # Initialize API and Speech Service
+        # Initialize API, Speech Service and Vision Analyzer
         self.gemini_api = GeminiAPI(self.config_manager)
         self.speech_service = SpeechService()
+        self.vision_analyzer = VisionAnalyzer(self.config_manager)
 
         # Setup UI
         self.setup_ui()
@@ -77,7 +79,7 @@ class CTkMainWindow:
         self.mode_var.set(self.config_manager.get('Settings', 'mode'))
         self.mode_options = ctk.CTkOptionMenu(
             self.mode_frame,
-            values=["auto", "code", "general"],
+            values=["auto", "code", "general", "image", "vision"],
             variable=self.mode_var,
             command=self.save_mode,
             width=120,
@@ -183,6 +185,8 @@ class CTkMainWindow:
         self.text_output.insert("end", "- auto: Automatically detects code questions and responds accordingly\n")
         self.text_output.insert("end", "- code: Forces responses to focus on coding solutions\n")
         self.text_output.insert("end", "- general: General purpose analysis\n")
+        self.text_output.insert("end", "- image: Analyzes visual elements like colors, layouts and objects\n")
+        self.text_output.insert("end", "- vision: Advanced AI-powered analysis of image content and context\n")
 
         # Modern status bar
         self.status_frame = ctk.CTkFrame(self.root, corner_radius=0, height=30, fg_color=self.colors['surface'])
@@ -277,17 +281,60 @@ class CTkMainWindow:
 
     def process_screenshot(self, screenshot):
         try:
-            # Extract text from screenshot using OCR
-            self.status_var.set("Extracting text...")
+            # Process screenshot based on selected mode
+            self.status_var.set("Processing screenshot...")
             self.root.update()
 
-            text = OCRProcessor.extract_text(screenshot)
+            mode = self.config_manager.get('Settings', 'mode')
 
-            if not text.strip():
+            # Handle vision analysis mode separately
+            if mode == "vision":
+                analysis_result = self.vision_analyzer.analyze_image_content(screenshot)
                 self.text_output.delete("0.0", "end")
+                self.text_output.insert("0.0", "Vision Analysis Results:\n\n")
+                self.text_output.insert("end", analysis_result)
+                self.status_var.set("Ready")
+                return
+
+            result = OCRProcessor.process_image(screenshot, mode)
+
+            # Clear previous output
+            self.text_output.delete("0.0", "end")
+
+            if result['type'] == 'image_analysis':
+                # Format and display image analysis results
+                analysis = result['content']
+                self.text_output.insert("0.0", "Image Analysis Results:\n\n")
+
+                # Colors
+                self.text_output.insert("end", "Colors:\n")
+                self.text_output.insert("end", f"- Dominant colors: {', '.join(analysis['color_analysis']['dominant_colors'])}\n")
+                self.text_output.insert("end", f"- Brightness: {analysis['color_analysis']['brightness']}\n\n")
+
+                # Composition
+                self.text_output.insert("end", "Composition:\n")
+                self.text_output.insert("end", f"- Aspect ratio: {analysis['composition']['aspect_ratio']}\n")
+                self.text_output.insert("end", f"- Complexity: {analysis['composition']['complexity']}\n")
+                self.text_output.insert("end", f"- Orientation: {analysis['composition']['orientation']}\n\n")
+
+                # Objects
+                self.text_output.insert("end", "Detected Objects:\n")
+                if analysis['objects']:
+                    for shape in analysis['objects']:
+                        self.text_output.insert("end", f"- {shape}\n")
+                else:
+                    self.text_output.insert("end", "- No distinct objects detected\n")
+
+                self.status_var.set("Ready")
+                return
+            elif not result['content'].strip():
                 self.text_output.insert("0.0", "No text found in the screenshot.\n\n")
                 self.status_var.set("Ready")
                 return
+
+            # Display extracted text
+            text = result['content']
+            self.text_output.insert("0.0", text + "\n\n")
 
             # Clear previous text
             self.text_output.delete("0.0", "end")
